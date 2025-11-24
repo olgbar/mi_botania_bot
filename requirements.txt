@@ -1,0 +1,7 @@
+pyTelegramBotAPI
+google-generativeai
+
+Flask
+google-genai
+APScheduler
+Pillow

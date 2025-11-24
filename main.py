@@ -3,7 +3,7 @@ import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 
 from config import TELEGRAM_TOKEN
-from utils.ai import chat_with_ai, identify_plant   # tu lógica NO se toca
+from utils.ai import chat_with_ai, identify_plant
 from db import PlantRepository
 from services.reminders import ReminderService
 
