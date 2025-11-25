@@ -35,24 +35,44 @@ class ReminderService:
 
     def schedule_plant(self, user_id, plant_name, days_interval):
         # Guardar en BD primero
-        self.repo.set_reminder(user_id, plant_name, days_interval)
-        
-        job_id = f"plant_{user_id}_{plant_name}".replace(" ", "_").lower()
-        
-        # Remover job existente
+        self.logger.info(f"🎯 INICIANDO schedule_plant - Planta: {plant_name}, Días: {days_interval}, User: {user_id}")
+
         try:
-            self.scheduler.remove_job(job_id)
-        except:
-            pass
+            self.repo.set_reminder(user_id, plant_name, days_interval)
+            self.logger.info(f"✅ GUARDADO en BD - {plant_name} cada {days_interval} días")
+            
+            job_id = f"plant_{user_id}_{plant_name}".replace(" ", "_").lower()
+            self.logger.info(f"🆔 Job ID generado: {job_id}")
+
+            # Remover job existente
+            try:
+                self.scheduler.remove_job(job_id)
+                self.logger.info(f"🗑️ Job anterior removido: {job_id}")
+            except Exception as e:
+                self.logger.info(f"ℹ️ No había job anterior o error removiendo: {e}")
+                pass
         
-        # Programar nuevo job
-        self.scheduler.add_job(
-            self._job_send_plant,
-            trigger=IntervalTrigger(days=days_interval),
-            args=[user_id, plant_name],  #Mejor que lambda
-            id=job_id,
-            replace_existing=True
-        )
+            # Programar nuevo job
+            self.scheduler.add_job(
+                self._job_send_plant,
+                trigger=IntervalTrigger(days=days_interval),
+                # trigger=CronTrigger(day_of_week='*', hour=9), ## <-- revisar si elegimos implementar
+                args=[user_id, plant_name],  #Mejor que lambda
+                id=job_id,
+                replace_existing=True
+            )
+            self.logger.info(f"✅ JOB PROGRAMADO - {plant_name} cada {days_interval} días")
+
+            # Verificar que quedó programado
+            job = self.scheduler.get_job(job_id)
+            if job:
+                self.logger.info(f"📅 JOB CONFIRMADO - Next run: {job.next_run_time}")
+            else:
+                self.logger.error(f"❌ JOB NO ENCONTRADO después de programar")
+                
+        except Exception as e:
+            self.logger.error(f"💥 ERROR CRÍTICO en schedule_plant: {e}")
+
 
     def _job_send_plant(self, user_id, plant_name):
         try:

@@ -1,7 +1,7 @@
 from bot.bot_instance import bot
 from handlers.ui import main_keyboard
 from handlers.plants import ver_plantas, pedir_planta_a_eliminar
-from handlers.reminders_manager import pedir_planta_recordatorio, pedir_recordatorio_a_eliminar
+from handlers.reminders_manager import pedir_planta_recordatorio, pedir_recordatorio_a_eliminar, ver_jobs_activos
 
 @bot.message_handler(commands=['start'])
 def start(msg):
@@ -10,6 +10,11 @@ def start(msg):
         "🌱 ¡Hola! Soy Botania, tu asistente personal de plantas.\n¿Qué necesitás?",
         reply_markup=main_keyboard()
     )
+
+
+@bot.message_handler(commands=['jobs'])
+def comando_jobs(msg):
+    ver_jobs_activos(msg.from_user.id, msg.chat.id)
 
 @bot.callback_query_handler(func=lambda call: True)
 def callback_menu(call):

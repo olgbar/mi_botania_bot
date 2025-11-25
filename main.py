@@ -1,3 +1,5 @@
+import logging
+import sys
 from bot.bot_instance import bot
 import telebot
 import handlers.start
@@ -5,6 +7,14 @@ import handlers.plants
 import handlers.reminders_manager
 import handlers.ai_chat
 from config import TELEGRAM_TOKEN
+
+# Configurar logging global
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    stream=sys.stdout,
+    force=True  # Forzar reconfiguración si ya estaba configurado
+)
 
 # ----------------EN RENDER IMPLEMENTANDO WEBHOOKS-----------------------------------
 
@@ -43,7 +53,15 @@ def home():
 # # ----------------EN local-----------------------------------
 
 # if __name__ == "__main__":
+#     #DESACTIVAR WEBHOOK antes de usar polling
+#     import requests
+#     try:
+#         print("🔧 Desactivando webhook para desarrollo local...")
+#         url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/deleteWebhook"
+#         response = requests.get(url)
+#         print(f"✅ Webhook desactivado: {response.json()}")
+#     except Exception as e:
+#         print(f"⚠️ Error desactivando webhook: {e}")
+    
+#     print("🚀 Iniciando bot en modo polling...")
 #     bot.infinity_polling()
-
-
-

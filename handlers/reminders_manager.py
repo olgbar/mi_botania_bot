@@ -56,3 +56,33 @@ def step_eliminar_recordatorio(msg):
         bot.send_message(msg.chat.id, f"🗑 Listo, eliminé *{planta}*.", parse_mode="Markdown", reply_markup=main_keyboard())
     else:
         bot.send_message(msg.chat.id, "Error eliminando el recordatorio.", reply_markup=main_keyboard())
+
+def ver_jobs_activos(user_id, chat_id):
+    """Comando para ver jobs - versión simple y segura"""
+    try:
+        jobs = reminder_manager.scheduler.get_jobs()
+        user_jobs = [job for job in jobs if f"plant_{user_id}_" in job.id]
+        
+        if not user_jobs:
+            bot.send_message(chat_id, "📭 No tenés jobs activos programados")
+            return
+            
+        texto = f"Tus recordatorios programados ({len(user_jobs)}):\n\n"
+        
+        for i, job in enumerate(user_jobs, 1):
+            plant_name = job.id.replace(f"plant_{user_id}_", "").replace("_", " ").title()
+            next_run = job.next_run_time.strftime("%d/%m %H:%M") if job.next_run_time else "No programado"
+            
+            texto += f"{i}. {plant_name}\n"
+            texto += f"   ⏰ Próximo: {next_run}\n"
+            texto += f"   🔄 Cada: {job.trigger}\n\n"
+            
+            # Limitar a 5 jobs para no exceder límites
+            if i >= 5:
+                texto += f"... y {len(user_jobs) - 5} más"
+                break
+        
+        bot.send_message(chat_id, texto)
+        
+    except Exception as e:
+        bot.send_message(chat_id, f"Error: {str(e)[:100]}")
