@@ -8,7 +8,8 @@ class ReminderService:
     def __init__(self, bot, repo):
         self.bot = bot
         self.repo = repo
-        self.scheduler = BackgroundScheduler(timezone="UTC")
+        # self.scheduler = BackgroundScheduler(timezone="UTC")
+        self.scheduler = BackgroundScheduler(timezone='America/Argentina/Buenos_Aires')
         self.started = False
         self.logger = logging.getLogger(__name__)
 
@@ -55,8 +56,8 @@ class ReminderService:
             # Programar nuevo job
             self.scheduler.add_job(
                 self._job_send_plant,
-                trigger=IntervalTrigger(days=days_interval),
-                # trigger=CronTrigger(day_of_week='*', hour=9), ## <-- revisar si elegimos implementar
+                # trigger=IntervalTrigger(days=days_interval),
+                trigger=CronTrigger(hour=8, minute=0), ## <-- revisar si elegimos implementar
                 args=[user_id, plant_name],  #Mejor que lambda
                 id=job_id,
                 replace_existing=True
