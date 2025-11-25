@@ -1,5 +1,5 @@
 import sqlite3
-from contextlib import closing
+from contextlib import contextmanager, closing
 
 from config import DATABASE_PATH
 
@@ -20,6 +20,12 @@ CREATE TABLE IF NOT EXISTS reminders (
     days_interval INTEGER NOT NULL,
     UNIQUE(user_id, plant_name)
 );
+
+CREATE TABLE IF NOT EXISTS user_context (
+    user_id INTEGER PRIMARY KEY,
+    last_plant TEXT
+);
+
 """
 
 class PlantRepository:
@@ -28,17 +34,26 @@ class PlantRepository:
         self.path = path
         self._ensure_schema()
 
-    def _conn(self):
-        return sqlite3.connect(self.path, check_same_thread=False)
+    @contextmanager
+    def _get_conn(self):
+        conn = sqlite3.connect(self.path, check_same_thread=False)
+        try:
+            yield conn
+            conn.commit()
+        except Exception as e:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
 
     def _ensure_schema(self):
-        with closing(sqlite3.connect(DATABASE_PATH)) as conn:
-            conn.executescript(SCHEMA)   # <-- CREA LAS TABLAS SI NO EXISTEN
-            conn.commit()
+        with self._get_conn() as conn:
+            conn.executescript(SCHEMA)
 
     # ---------- PLANTAS ----------
+ 
     def add_or_update_plant(self, user_id, name, care=None, water_every_days=7):
-        with closing(self._conn()) as conn:
+        with self._get_conn() as conn:
             conn.execute(
                 """
                 INSERT INTO plants (user_id, name, care, water_every_days)
@@ -52,7 +67,7 @@ class PlantRepository:
             conn.commit()
 
     def get_plants(self, user_id):
-        with closing(self._conn()) as conn:
+        with self._get_conn() as conn:
             rows = conn.execute(
                 "SELECT name, care, water_every_days FROM plants WHERE user_id=?",
                 (user_id,)
@@ -62,8 +77,9 @@ class PlantRepository:
                 for r in rows
             ]
 
+
     def get_plant(self, user_id, name):
-        with closing(self._conn()) as conn:
+        with self._get_conn() as conn:
             row = conn.execute(
                 "SELECT name, care, water_every_days FROM plants WHERE user_id=? AND LOWER(name)=?",
                 (user_id, name)
@@ -73,7 +89,7 @@ class PlantRepository:
             return {"name": row[0], "care": row[1], "water_every_days": row[2]}
         
     def remove_plant(self, user_id, name):
-        with closing(self._conn()) as conn:
+        with self._get_conn() as conn:
             conn.execute(
                 "DELETE FROM plants WHERE user_id=? AND LOWER(name)=?",
                 (user_id, name.lower())
@@ -83,7 +99,7 @@ class PlantRepository:
 
     # ---------- RECORDATORIOS ----------
     def set_reminder(self, user_id, plant_name, interval):
-        with closing(self._conn()) as conn:
+        with self._get_conn() as conn:
             conn.execute(
                 """
                 INSERT INTO reminders (user_id, plant_name, days_interval)
@@ -96,7 +112,7 @@ class PlantRepository:
             conn.commit()
 
     def get_reminders(self, user_id):
-        with closing(self._conn()) as conn:
+        with self._get_conn() as conn:
             rows = conn.execute(
                 "SELECT plant_name, days_interval FROM reminders WHERE user_id=?",
                 (user_id,)
@@ -107,7 +123,7 @@ class PlantRepository:
         
     def get_all_reminders(self):
         """Devuelve todos los recordatorios de todos los usuarios."""
-        with closing(self._conn()) as conn:
+        with self._get_conn() as conn:
             rows = conn.execute(
                 "SELECT user_id, plant_name, days_interval FROM reminders"
             ).fetchall()
@@ -123,9 +139,31 @@ class PlantRepository:
 
     def remove_reminder(self, user_id, plant_name):
         """Elimina un reminder específico de la BD."""
-        with closing(self._conn()) as conn:
+        with self._get_conn() as conn:
             conn.execute(
-                "DELETE FROM reminders WHERE user_id=? AND plant_name=?",
+                "DELETE FROM reminders WHERE user_id=? AND LOWER(plant_name)=?",
                 (user_id, plant_name)
             )
             conn.commit()
+
+
+# --------------------memoria -----------------------
+
+
+    def set_last_plant(self, user_id, plant_name):
+        with self._get_conn() as conn:
+            conn.execute("""
+                INSERT INTO user_context (user_id, last_plant)
+                VALUES (?, ?)
+                ON CONFLICT(user_id) DO UPDATE SET last_plant=excluded.last_plant;
+            """, (user_id, plant_name))
+            conn.commit()
+
+    def get_last_plant(self, user_id):
+        with self._get_conn() as conn:
+            row = conn.execute(
+                "SELECT last_plant FROM user_context WHERE user_id=?",
+                (user_id,)
+            ).fetchone()
+            return row[0] if row else None
+

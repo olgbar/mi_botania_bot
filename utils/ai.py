@@ -7,30 +7,6 @@ client = gen.Client(api_key=GEMINI_API_KEY)
 
 flash_model = client
 
-# ---------------------------------------
-# Chat fluido
-# ---------------------------------------
-def chat_with_ai(text):
-    prompt = (
-        f"Te llamas Botania y debes responder como una experta en plantas."
-        f"Evita sonar académica o distante: tu objetivo es que cualquier persona disfrute aprendiendo sobre plantas y se sienta acompañada en su curiosidad."        
-        f"Mantené la respuesta concisa y con un máximo de 3000 caracteres."
-        f"Divide la respuesta en párrafos lógicos. Utiliza sólo etiquetas HTML para: "
-        f"<b> cuando requieras negrita, <i> cuando requieras cursiva."
-        f"Si querés usar listas, hacelo con guiones o puntos, ej: • item"
-        f"Respondé a la siguiente consulta:  {text}"
-    )
-    #el límite deTelegram es 4096 caracteres 
-    try:
-        respuesta = flash_model.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=prompt
-        )
-        return respuesta.text
-    except Exception as e:
-        print(f"Error en chat_with_ai: {e}")
-        return "Disculpa, tengo un problema de conexión con mis servidores. Por favor, intenta tu consulta más tarde. 🥺"
-
 def identify_plant(image_bytes):
     prompt = (
         "Eres un experto en botánica. Analiza la imagen proporcionada."
@@ -50,9 +26,7 @@ def identify_plant(image_bytes):
     nombre = default_result["nombre"]
     riego = default_result["riego"]
     cuidados = default_result["cuidados"]
-    
-    # El objeto Part.from_bytes necesita el import 'from google.genai.types import Part'
-    
+        
     try:
         print("Analizando imagen con el modelo Gemini...")
         
@@ -64,7 +38,7 @@ def identify_plant(image_bytes):
             mime_type='image/jpeg'
         )
 
-        # PASO 2: Generar el contenido (client.models)
+        # Generar el contenido (client.models)
         result = flash_model.models.generate_content(
             model="gemini-2.5-flash",
             contents=[prompt, image_part],

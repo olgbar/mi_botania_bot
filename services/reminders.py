@@ -37,7 +37,7 @@ class ReminderService:
         # Guardar en BD primero
         self.repo.set_reminder(user_id, plant_name, days_interval)
         
-        job_id = f"plant_{user_id}_{plant_name}".replace(" ", "_")
+        job_id = f"plant_{user_id}_{plant_name}".replace(" ", "_").lower()
         
         # Remover job existente
         try:
@@ -93,7 +93,7 @@ class ReminderService:
     def _job_send_test(self, user_id):
         """Job para enviar el recordatorio de prueba."""
         try:
-            self.bot.send_message(user_id, "💧 ¡Hora de regar tu planta! (test funciona).")
+            self.bot.send_message(user_id, "💧 ¡Hora de regar tu planta! (demostración funciona).")
         except Exception as e:
             self.logger.error(f"Error enviando mensaje de prueba a {user_id}: {e}")
 
