@@ -1,8 +1,5 @@
-# bot/bot_instance.py
-
-import dotenv
-dotenv.load_dotenv()
-
+# import dotenv
+# dotenv.load_dotenv()
 import telebot
 
 from config import TELEGRAM_TOKEN, DATABASE_PATH
