@@ -1,8 +1,11 @@
+##---------descomentarl en LOCAL-----------
 # import dotenv
 # dotenv.load_dotenv()
+##---------------------------------
 import telebot
 
-from config import TELEGRAM_TOKEN, DATABASE_PATH
+# from config import TELEGRAM_TOKEN, DATABASE_PATH
+from config import TELEGRAM_TOKEN
 from db import PlantRepository
 from services.reminders import ReminderService
 
@@ -16,7 +19,7 @@ repo = PlantRepository()
 reminders = ReminderService(bot, repo)
 reminders.start()  # muy importante
 
-print("USANDO BASE DE DATOS EN:", DATABASE_PATH)
+# print("USANDO BASE DE DATOS EN:", DATABASE_PATH)
 
 # Exportar instancias
 __all__ = ["bot", "repo", "reminders"]

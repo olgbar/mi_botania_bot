@@ -6,3 +6,4 @@ google-genai
 APScheduler
 Pillow
 python-dateutil
+psycopg2-binary
