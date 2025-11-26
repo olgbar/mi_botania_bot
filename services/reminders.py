@@ -56,8 +56,8 @@ class ReminderService:
             # Programar nuevo job
             self.scheduler.add_job(
                 self._job_send_plant,
-                # trigger=IntervalTrigger(days=days_interval),
-                trigger=CronTrigger(hour=8, minute=0), ## <-- revisar si elegimos implementar
+                trigger=IntervalTrigger(days=days_interval),
+                # trigger=CronTrigger(hour=8, minute=0), ## <-- revisar si elegimos implementar
                 args=[user_id, plant_name],  #Mejor que lambda
                 id=job_id,
                 replace_existing=True
@@ -74,7 +74,7 @@ class ReminderService:
         except Exception as e:
             self.logger.error(f"💥 ERROR CRÍTICO en schedule_plant: {e}")
 
-
+    #Funcion ejecutada en el scheduler
     def _job_send_plant(self, user_id, plant_name):
         try:
             self.bot.send_message(user_id, f"💧 ¡Hora de regar tu {plant_name}!")
